@@ -4,6 +4,9 @@ import com.washingapp.washing_backend.entity.Booking
 import com.washingapp.washing_backend.repository.*
 import org.springframework.stereotype.Service
 import java.util.UUID
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+
 
 @Service
 class BookingService(
@@ -36,5 +39,52 @@ class BookingService(
         )
 
         return bookingRepository.save(booking)
+    }
+
+    @Transactional
+    fun cancel(bookingId: UUID): Booking {
+
+        val booking = bookingRepository.findById(bookingId)
+            .orElseThrow { RuntimeException("Booking not found") }
+
+        if (booking.status == "CANCELLED") {
+            throw RuntimeException("Booking already cancelled")
+        }
+
+        if (booking.status == "COMPLETED") {
+            throw RuntimeException("Cannot cancel completed booking")
+        }
+
+        val updatedBooking = booking.copy(
+            status = "CANCELLED",
+            cancelledAt = LocalDateTime.now()
+        )
+
+        return bookingRepository.save(updatedBooking)
+    }
+
+    @Transactional
+    fun complete(bookingId: UUID): Booking {
+
+        val booking = bookingRepository.findById(bookingId)
+            .orElseThrow { RuntimeException("Booking not found") }
+
+        if (booking.status == "CANCELLED") {
+            throw RuntimeException("Cannot complete cancelled booking")
+        }
+
+        if (booking.status == "COMPLETED") {
+            throw RuntimeException("Booking already completed")
+        }
+
+        if (booking.status != "PAID") {
+            throw RuntimeException("Only paid bookings can be completed")
+        }
+
+        val updatedBooking = booking.copy(
+            status = "COMPLETED"
+        )
+
+        return bookingRepository.save(updatedBooking)
     }
 }
