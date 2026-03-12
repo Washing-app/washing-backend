@@ -24,7 +24,7 @@ data class Booking(
     val washType: WashType,
 
     @Column(nullable = false)
-    val status: String,
+    var status: String,
 
     @Column(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now(),
