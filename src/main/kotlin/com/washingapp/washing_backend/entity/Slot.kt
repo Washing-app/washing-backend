@@ -19,5 +19,6 @@ data class Slot(
     val startTime: LocalDateTime,
 
     @Column(name = "end_time", nullable = false)
-    val endTime: LocalDateTime
+    val endTime: LocalDateTime,
+
 )

@@ -15,9 +15,9 @@ data class Booking(
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
 
-    @OneToOne
-    @JoinColumn(name = "slot_id", nullable = false, unique = true)
-    val slot: Slot,
+    @ManyToOne
+    @JoinColumn(name = "slot_id", nullable = false)
+    val startSlot: Slot,
 
     @ManyToOne
     @JoinColumn(name = "wash_type_id", nullable = false)
@@ -26,9 +26,13 @@ data class Booking(
     @Column(nullable = false)
     var status: String,
 
-    @Column(name = "created_at")
+    @Column(name = "start_time", nullable = false)
+    val startTime: LocalDateTime,
+
+    @Column(name = "end_time", nullable = false)
+    val endTime: LocalDateTime,
+
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
-    @Column(name = "cancelled_at")
-    val cancelledAt: LocalDateTime? = null
+    var cancelledAt: LocalDateTime? = null
 )

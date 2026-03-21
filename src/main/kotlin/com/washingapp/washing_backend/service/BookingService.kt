@@ -2,6 +2,7 @@ package com.washingapp.washing_backend.service
 
 import com.washingapp.washing_backend.entity.Booking
 import com.washingapp.washing_backend.repository.*
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.util.UUID
 import org.springframework.transaction.annotation.Transactional
@@ -16,30 +17,48 @@ class BookingService(
     private val washTypeRepository: WashTypeRepository
 ) {
 
-    fun create(requestUserId: UUID, slotId: Long, washTypeId: Long): Booking {
+    @Transactional
+    fun create(userId: UUID, slotId: Long, washTypeId: Long): Booking {
 
-        if (bookingRepository.existsBySlotId(slotId)) {
-            throw RuntimeException("Slot already booked")
-        }
-
-        val user = userRepository.findById(requestUserId)
+        val user = userRepository.findById(userId)
             .orElseThrow { RuntimeException("User not found") }
 
         val slot = slotRepository.findById(slotId)
             .orElseThrow { RuntimeException("Slot not found") }
 
         val washType = washTypeRepository.findById(washTypeId)
-            .orElseThrow { RuntimeException("WashType not found") }
+            .orElseThrow { RuntimeException("Wash type not found") }
+
+        val startTime = slot.startTime
+
+        val totalDuration = washType.durationMinutes + 20
+
+        val endTime = startTime.plusMinutes(totalDuration.toLong())
+
+        val machineId = slot.machine.id
+
+        val overlap = bookingRepository.existsOverlappingBooking(
+            machineId,
+            startTime,
+            endTime
+        )
+
+        if (overlap) {
+            throw RuntimeException("Selected time interval already booked")
+        }
 
         val booking = Booking(
             user = user,
-            slot = slot,
+            startSlot = slot,
             washType = washType,
-            status = "PENDING"
+            status = "PENDING",
+            startTime = startTime,
+            endTime = endTime
         )
 
         return bookingRepository.save(booking)
     }
+
 
     @Transactional
     fun cancel(bookingId: UUID): Booking {

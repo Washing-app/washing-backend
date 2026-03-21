@@ -16,7 +16,10 @@ class WashTypeController(
         return washTypeService.create(
             request.name,
             request.durationMinutes,
-            request.price
+            request.price,
+            request.temperature,
+            request.spinSpeed,
+            request.description
         )
     }
 

@@ -18,5 +18,14 @@ data class WashType(
     val durationMinutes: Int,
 
     @Column(nullable = false)
-    val price: BigDecimal
+    val price: BigDecimal,
+
+    @Column(nullable = false)
+    val temperature: Int,
+
+    @Column(name = "spin_speed", nullable = false)
+    val spinSpeed: Int,
+
+    @Column(columnDefinition = "TEXT")
+    val description: String
 )
