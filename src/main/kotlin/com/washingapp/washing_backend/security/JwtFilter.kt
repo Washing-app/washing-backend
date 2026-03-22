@@ -19,6 +19,7 @@ class JwtFilter(
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        println("HEADER: " + request.getHeader("Authorization"))
 
         val header = request.getHeader("Authorization")
 

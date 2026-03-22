@@ -3,14 +3,18 @@ package com.washingapp.washing_backend.security
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 import javax.crypto.SecretKey
 
 @Service
-class JwtService {
+class JwtService(
+    @Value("\${jwt.secret}")
+    private val secret: String
+) {
 
-    private val secretKey: SecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256)
+    private val secretKey: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
     fun generateToken(userId: UUID): String {
         return Jwts.builder()

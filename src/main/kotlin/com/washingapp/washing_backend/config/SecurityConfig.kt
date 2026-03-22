@@ -23,6 +23,7 @@ class SecurityConfig(
             }
             .authorizeHttpRequests {
                 it.requestMatchers("/api/auth/**").permitAll()
+                it.requestMatchers("/api/wash-types/**").permitAll()
                 it.anyRequest().authenticated()
             }
             .addFilterBefore(
