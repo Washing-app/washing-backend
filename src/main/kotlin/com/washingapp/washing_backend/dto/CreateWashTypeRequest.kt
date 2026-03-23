@@ -8,5 +8,7 @@ data class CreateWashTypeRequest(
     val price: BigDecimal,
     val temperature: Int,
     val spinSpeed: Int,
-    val description: String
+    val description: String,
+    val id: Long,
+    val imageLink: String?
 )

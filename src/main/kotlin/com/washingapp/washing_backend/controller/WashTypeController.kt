@@ -19,7 +19,9 @@ class WashTypeController(
             request.price,
             request.temperature,
             request.spinSpeed,
-            request.description
+            request.description,
+            request.id,
+            request.imageLink
         )
     }
 

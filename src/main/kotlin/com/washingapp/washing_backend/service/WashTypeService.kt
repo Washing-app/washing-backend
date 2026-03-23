@@ -16,7 +16,9 @@ class WashTypeService(
         price: BigDecimal,
         temperature: Int,
         spinSpeed: Int,
-        description: String
+        description: String,
+        id: Long,
+        imageLink: String?
     ): WashType {
 
         if (durationMinutes <= 0) {
@@ -41,7 +43,9 @@ class WashTypeService(
             price = price,
             temperature = temperature,
             spinSpeed = spinSpeed,
-            description = description
+            description = description,
+            id = id,
+            imageLink = imageLink
         )
 
         return washTypeRepository.save(washType)

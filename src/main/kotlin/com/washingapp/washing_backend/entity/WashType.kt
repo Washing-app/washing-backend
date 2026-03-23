@@ -27,5 +27,8 @@ data class WashType(
     val spinSpeed: Int,
 
     @Column(columnDefinition = "TEXT")
-    val description: String
+    val description: String,
+
+    @Column(name = "image_link")
+    val imageLink: String?
 )
