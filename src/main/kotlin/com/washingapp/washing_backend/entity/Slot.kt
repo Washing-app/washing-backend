@@ -4,7 +4,11 @@ import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "slots")
+@Table(name = "slots",
+    uniqueConstraints = [
+        UniqueConstraint(columnNames = ["machine_id", "start_time"])
+    ]
+)
 data class Slot(
 
     @Id
@@ -21,4 +25,6 @@ data class Slot(
     @Column(name = "end_time", nullable = false)
     val endTime: LocalDateTime,
 
+    @Column(name = "is_booked", nullable = false)
+    val isBooked: Boolean = false
 )

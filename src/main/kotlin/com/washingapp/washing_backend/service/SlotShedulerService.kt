@@ -1,12 +1,12 @@
 package com.washingapp.washing_backend.service
 
+import com.washingapp.washing_backend.entity.Machine
 import com.washingapp.washing_backend.entity.Slot
 import com.washingapp.washing_backend.repository.MachineRepository
 import com.washingapp.washing_backend.repository.SlotRepository
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class SlotSchedulerService(
@@ -14,57 +14,58 @@ class SlotSchedulerService(
     private val machineRepository: MachineRepository
 ) {
 
-    private val SLOT_INTERVAL_MINUTES = 10
     private val DAYS_AHEAD = 7
 
-    /**
-     * Проверяем каждые 30 минут
-     */
     @Scheduled(fixedRate = 30 * 60 * 1000)
     fun ensureSlotsForNextWeek() {
+        val today = LocalDate.now()
+        val targetDate = today.plusDays(DAYS_AHEAD.toLong())
 
         val machines = machineRepository.findAll()
 
         for (machine in machines) {
-
             val lastSlot = slotRepository.findTopByMachineIdOrderByStartTimeDesc(machine.id)
 
-            val startDate = if (lastSlot == null) {
-                LocalDate.now()
+            val startDate: LocalDate = if (lastSlot != null) {
+                lastSlot.startTime.toLocalDate().plusDays(1)
             } else {
-                lastSlot.startTime.toLocalDate()
+                today
             }
 
-            val targetDate = LocalDate.now().plusDays(DAYS_AHEAD.toLong())
-
             var date = startDate
-
-            while (date.isBefore(targetDate) || date.isEqual(targetDate)) {
-
-                generateSlotsForDay(machine.id, date)
-
+            while (!date.isAfter(targetDate)) {
+                generateSlotsForDay(machine, date)
                 date = date.plusDays(1)
             }
         }
     }
 
-    private fun generateSlotsForDay(machineId: Long, date: LocalDate) {
+    private fun generateSlotsForDay(machine: Machine, date: LocalDate) {
+        val startOfDay = date.atTime(6, 0)
+        val endOfDay = date.atTime(23, 0)
 
-        val machine = machineRepository.findById(machineId).orElseThrow()
+        var current = startOfDay
+        val slotsToSave = mutableListOf<Slot>()
 
-        var time = date.atStartOfDay()
+        while (current.isBefore(endOfDay)) {
+            val exists = slotRepository.existsByMachineIdAndStartTime(machine.id, current)
 
-        repeat(144) {
+            if (!exists) {
+                slotsToSave.add(
+                    Slot(
+                        machine = machine,
+                        startTime = current,
+                        endTime = current.plusMinutes(10),
+                        isBooked = false
+                    )
+                )
+            }
 
-            val slot = Slot(
-                machine = machine,
-                startTime = time,
-                endTime = time.plusMinutes(SLOT_INTERVAL_MINUTES.toLong()),
-            )
+            current = current.plusMinutes(10)
+        }
 
-            slotRepository.save(slot)
-
-            time = time.plusMinutes(SLOT_INTERVAL_MINUTES.toLong())
+        if (slotsToSave.isNotEmpty()) {
+            slotRepository.saveAll(slotsToSave)
         }
     }
 }
