@@ -1,5 +1,6 @@
 package com.washingapp.washing_backend.controller
 
+import com.washingapp.washing_backend.dto.AuthResponse
 import com.washingapp.washing_backend.dto.LoginRequest
 import com.washingapp.washing_backend.service.AuthService
 import org.springframework.web.bind.annotation.*
@@ -11,8 +12,12 @@ class AuthController(
 ) {
 
     @PostMapping("/login")
-    fun login(@RequestBody request: LoginRequest): Map<String, String> {
-        val token = authService.login(request)
-        return mapOf("token" to token)
+    fun login(@RequestBody request: LoginRequest): AuthResponse {
+        val (token, userId) = authService.login(request)
+
+        return AuthResponse(
+            token = token,
+            userId = userId
+        )
     }
 }

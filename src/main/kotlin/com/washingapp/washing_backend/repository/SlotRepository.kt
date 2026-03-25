@@ -52,4 +52,18 @@ interface SlotRepository : JpaRepository<Slot, Long> {
         @Param("startOfDay") startOfDay: LocalDateTime,
         @Param("endOfDay") endOfDay: LocalDateTime
     ): List<Long>
+
+    @Query("""
+    select s
+    from Slot s
+    where s.machine.id = :machineId
+      and s.startTime < :endTime
+      and s.endTime > :startTime
+    order by s.startTime
+""")
+    fun findAllInInterval(
+        machineId: Long,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): List<Slot>
 }

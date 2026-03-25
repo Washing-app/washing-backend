@@ -47,6 +47,23 @@ class BookingService(
             throw RuntimeException("Selected time interval already booked")
         }
 
+        val affectedSlots = slotRepository.findAllInInterval(
+            machineId = machineId,
+            startTime = startTime,
+            endTime = endTime
+        )
+
+        if (affectedSlots.isEmpty()) {
+            throw RuntimeException("No slots found for selected interval")
+        }
+
+        if (affectedSlots.any { it.isBooked }) {
+            throw RuntimeException("Some slots in selected interval are already booked")
+        }
+
+        val updatedSlots = affectedSlots.map { it.copy(isBooked = true) }
+        slotRepository.saveAll(updatedSlots)
+
         val booking = Booking(
             user = user,
             startSlot = slot,
@@ -73,6 +90,17 @@ class BookingService(
         if (booking.status == "COMPLETED") {
             throw RuntimeException("Cannot cancel completed booking")
         }
+
+        val machineId = booking.startSlot.machine.id
+
+        val affectedSlots = slotRepository.findAllInInterval(
+            machineId = machineId,
+            startTime = booking.startTime,
+            endTime = booking.endTime
+        )
+
+        val freedSlots = affectedSlots.map { it.copy(isBooked = false) }
+        slotRepository.saveAll(freedSlots)
 
         val updatedBooking = booking.copy(
             status = "CANCELLED",

@@ -14,15 +14,15 @@ class AuthService(
 
     private val passwordEncoder = BCryptPasswordEncoder()
 
-    fun login(request: LoginRequest): String {
-
+    fun login(request: LoginRequest): Pair<String, String> {
         val user = userRepository.findByPhone(request.phone)
             ?: throw RuntimeException("User not found")
 
         if (!passwordEncoder.matches(request.password, user.passwordHash)) {
             throw RuntimeException("Invalid password")
         }
+        val token = jwtService.generateToken(user.id)
 
-        return jwtService.generateToken(user.id)
+        return token to user.id.toString()
     }
 }
