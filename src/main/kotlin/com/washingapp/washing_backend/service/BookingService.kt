@@ -1,5 +1,7 @@
 package com.washingapp.washing_backend.service
 
+import com.washingapp.washing_backend.dto.BookingResponse
+import com.washingapp.washing_backend.dto.WashTypeShortResponse
 import com.washingapp.washing_backend.entity.Booking
 import com.washingapp.washing_backend.repository.*
 import org.springframework.data.domain.PageRequest
@@ -76,6 +78,22 @@ class BookingService(
         return bookingRepository.save(booking)
     }
 
+    fun getMyBookings(userId: UUID): List<BookingResponse> {
+        return bookingRepository.findAllByUserIdOrderByStartTimeAsc(userId)
+            .map { it.toResponse() }
+    }
+
+    fun getBookingById(userId: UUID, bookingId: UUID): BookingResponse {
+        val booking = bookingRepository.findById(bookingId)
+            .orElseThrow { RuntimeException("Booking not found") }
+
+        if (booking.user.id != userId) {
+            throw RuntimeException("Access denied")
+        }
+
+        return booking.toResponse()
+    }
+
 
     @Transactional
     fun cancel(bookingId: UUID): Booking {
@@ -133,5 +151,24 @@ class BookingService(
         )
 
         return bookingRepository.save(updatedBooking)
+    }
+
+    private fun Booking.toResponse(): BookingResponse {
+        return BookingResponse(
+            id = this.id.toString(),
+            status = this.status,
+            startTime = this.startTime.toString(),
+            endTime = this.endTime.toString(),
+            cancelledAt = this.cancelledAt?.toString(),
+            machineName = this.startSlot.machine.name,
+            washType = WashTypeShortResponse(
+                id = this.washType.id,
+                name = this.washType.name,
+                durationMinutes = this.washType.durationMinutes,
+                price = this.washType.price.toInt(),
+                temperature = this.washType.temperature,
+                spinSpeed = this.washType.spinSpeed
+            )
+        )
     }
 }

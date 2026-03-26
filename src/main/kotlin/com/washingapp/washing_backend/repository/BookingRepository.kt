@@ -24,4 +24,21 @@ interface BookingRepository : JpaRepository<Booking, UUID> {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Boolean
+
+    @Query("""
+    select b
+    from Booking b
+    where b.startSlot.machine.id = :machineId
+      and b.startTime < :endOfDay
+      and b.endTime > :startOfDay
+      and b.status <> 'CANCELLED'
+    order by b.startTime
+""")
+    fun findAllByMachineAndDay(
+        machineId: Long,
+        startOfDay: LocalDateTime,
+        endOfDay: LocalDateTime
+    ): List<Booking>
+
+    fun findAllByUserIdOrderByStartTimeAsc(userId: UUID): List<Booking>
 }

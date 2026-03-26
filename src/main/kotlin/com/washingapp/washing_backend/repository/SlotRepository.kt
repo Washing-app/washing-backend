@@ -66,4 +66,18 @@ interface SlotRepository : JpaRepository<Slot, Long> {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): List<Slot>
+
+    @Query("""
+    select s
+    from Slot s
+    where s.machine.id = :machineId
+      and s.startTime >= :startOfDay
+      and s.startTime < :endOfDay
+    order by s.startTime
+""")
+    fun findAllByMachineAndDay(
+        machineId: Long,
+        startOfDay: LocalDateTime,
+        endOfDay: LocalDateTime
+    ): List<Slot>
 }

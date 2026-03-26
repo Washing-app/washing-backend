@@ -33,8 +33,9 @@ class MachineController(
     @GetMapping("/{machineId}/slots")
     fun getAvailableSlots(
         @PathVariable machineId: Long,
-        @RequestParam date: LocalDate
+        @RequestParam date: LocalDate,
+        @RequestParam washTypeId: Long
     ): List<SlotResponse> {
-        return machineService.getAvailableSlots(machineId, date)
+        return machineService.getAvailableSlots(machineId, date, washTypeId)
     }
 }
