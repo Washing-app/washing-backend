@@ -26,5 +26,5 @@ data class Slot(
     val endTime: LocalDateTime,
 
     @Column(name = "is_booked", nullable = false)
-    val isBooked: Boolean = false
+    var isBooked: Boolean = false
 )

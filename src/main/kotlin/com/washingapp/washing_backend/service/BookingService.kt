@@ -1,6 +1,7 @@
 package com.washingapp.washing_backend.service
 
 import com.washingapp.washing_backend.dto.BookingResponse
+import com.washingapp.washing_backend.dto.PrepareBookingResponse
 import com.washingapp.washing_backend.dto.WashTypeShortResponse
 import com.washingapp.washing_backend.entity.Booking
 import com.washingapp.washing_backend.repository.*
@@ -31,12 +32,20 @@ class BookingService(
         val washType = washTypeRepository.findById(washTypeId)
             .orElseThrow { RuntimeException("Wash type not found") }
 
+        val activeUnpaidBooking = bookingRepository
+            .findFirstByUserIdAndStatusAndEndTimeAfterOrderByCreatedAtAsc(
+                userId = userId,
+                status = "PENDING_PAYMENT",
+                endTime = LocalDateTime.now()
+            )
+
+        if (activeUnpaidBooking != null) {
+            throw RuntimeException("User has unpaid active booking")
+        }
+
         val startTime = slot.startTime
-
         val totalDuration = washType.durationMinutes + 20
-
         val endTime = startTime.plusMinutes(totalDuration.toLong())
-
         val machineId = slot.machine.id
 
         val overlap = bookingRepository.existsOverlappingBooking(
@@ -63,19 +72,58 @@ class BookingService(
             throw RuntimeException("Some slots in selected interval are already booked")
         }
 
-        val updatedSlots = affectedSlots.map { it.copy(isBooked = true) }
-        slotRepository.saveAll(updatedSlots)
+        affectedSlots.forEach { it.isBooked = true }
+        slotRepository.saveAll(affectedSlots)
+
+        val userAlreadyUsedFreeBooking = bookingRepository.existsByUserId(userId)
 
         val booking = Booking(
             user = user,
             startSlot = slot,
             washType = washType,
-            status = "PENDING",
+            status = if (userAlreadyUsedFreeBooking) "PENDING_PAYMENT" else "PAID",
             startTime = startTime,
             endTime = endTime
         )
 
         return bookingRepository.save(booking)
+    }
+
+    fun prepare(userId: UUID, slotId: Long, washTypeId: Long): PrepareBookingResponse {
+        val slot = slotRepository.findById(slotId)
+            .orElseThrow { RuntimeException("Slot not found") }
+
+        val washType = washTypeRepository.findById(washTypeId)
+            .orElseThrow { RuntimeException("Wash type not found") }
+
+        val activeUnpaidBooking = bookingRepository
+            .findFirstByUserIdAndStatusAndEndTimeAfterOrderByCreatedAtAsc(
+                userId = userId,
+                status = "PENDING_PAYMENT",
+                endTime = LocalDateTime.now()
+            )
+
+        if (activeUnpaidBooking != null) {
+            return PrepareBookingResponse(
+                paymentRequired = true,
+                blockedByUnpaidBooking = true,
+                existingUnpaidBookingId = activeUnpaidBooking.id.toString(),
+                slotId = slotId,
+                washTypeId = washTypeId,
+                price = washType.price
+            )
+        }
+
+        val userAlreadyUsedFreeBooking = bookingRepository.existsByUserId(userId)
+
+        return PrepareBookingResponse(
+            paymentRequired = userAlreadyUsedFreeBooking,
+            blockedByUnpaidBooking = false,
+            existingUnpaidBookingId = null,
+            slotId = slotId,
+            washTypeId = washTypeId,
+            price = washType.price
+        )
     }
 
     fun getMyBookings(userId: UUID): List<BookingResponse> {

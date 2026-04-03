@@ -41,4 +41,12 @@ interface BookingRepository : JpaRepository<Booking, UUID> {
     ): List<Booking>
 
     fun findAllByUserIdOrderByStartTimeAsc(userId: UUID): List<Booking>
+
+    fun existsByUserId(userId: UUID): Boolean
+
+    fun findFirstByUserIdAndStatusAndEndTimeAfterOrderByCreatedAtAsc(
+        userId: UUID,
+        status: String,
+        endTime: LocalDateTime
+    ): Booking?
 }
