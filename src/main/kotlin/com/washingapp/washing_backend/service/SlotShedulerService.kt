@@ -41,8 +41,8 @@ class SlotSchedulerService(
     }
 
     private fun generateSlotsForDay(machine: Machine, date: LocalDate) {
-        val startOfDay = date.atTime(6, 0)
-        val endOfDay = date.atTime(23, 0)
+        val startOfDay = date.atStartOfDay()
+        val endOfDay = date.plusDays(1).atStartOfDay()
 
         var current = startOfDay
         val slotsToSave = mutableListOf<Slot>()

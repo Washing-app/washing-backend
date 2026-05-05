@@ -81,7 +81,7 @@ class BookingService(
             user = user,
             startSlot = slot,
             washType = washType,
-            status = if (userAlreadyUsedFreeBooking) "PENDING_PAYMENT" else "PAID",
+            status =  "PENDING_PAYMENT",
             startTime = startTime,
             endTime = endTime
         )

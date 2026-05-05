@@ -16,11 +16,17 @@ data class Payment(
     val booking: Booking,
 
     @Column(name = "provider_payment_id")
-    val providerPaymentId: String?,
+    var providerPaymentId: String?,
 
     @Column(nullable = false)
-    val status: String,
+    var status: String,
 
     @Column(nullable = false)
-    val amount: BigDecimal
+    val amount: BigDecimal,
+
+    @Column(name = "confirmation_url", length = 1000)
+    var confirmationUrl: String? = null,
+
+    @Column(name = "idempotence_key", length = 64)
+    var idempotenceKey: String? = null
 )
